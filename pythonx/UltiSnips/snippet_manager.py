@@ -688,7 +688,8 @@ class SnippetManager:
 
         for _, source in self._snippet_sources:
             possible_snippets = source.get_snippets(
-                filetypes, before, partial, autotrigger_only, self._visual_content
+                # ignore autotrigger_only in case a non-autotrigger overrides it with higher priority
+                filetypes, before, partial, False, self._visual_content
             )
 
             for snippet in possible_snippets:
@@ -716,7 +717,9 @@ class SnippetManager:
             return snippets
 
         highest_priority = max(s.priority for s in snippets)
-        return [s for s in snippets if s.priority == highest_priority]
+        highest_priority_snippets = [s for s in snippets if s.priority == highest_priority]
+        # since we got all snippets ignoring autotrigger_only before, we have to filter
+        return [s for s in highest_priority_snippets if s.has_option('A') == autotrigger_only]
 
     def _do_snippet(self, snippet, before):
         """Expands the given snippet, and handles everything that needs to be
